@@ -38,13 +38,13 @@ class Policy(torch.nn.Module):
         l2 = self.linear_2(a1)
         return l2
 
-policy = Policy()
-target = Policy()
+policy = Policy().to(device)
+target = Policy().to(device)
 target.load_state_dict(policy.state_dict())
 optimizer = torch.optim.Adam(policy.parameters())
 loss_function = torch.nn.MSELoss()
 
-max_reward = 0
+max_reward = -float('inf')
 epsilon = 1.0
 experience_replay = collections.deque(maxlen=MEMORY_SIZE)
 for episode in range(N_EPISODES):
@@ -85,7 +85,7 @@ for episode in range(N_EPISODES):
             idxs = [idx for idx in range(BATCH_SIZE) if batch[3][idx] is not None]
             next_states = [batch[3][idx] for idx in range(BATCH_SIZE) if batch[3][idx] is not None]
             output[idxs] = target(torch.stack(next_states)).max(1)[0].detach()
-            expected_state_action_values = torch.Tensor(batch[2]) + GAMMA * output
+            expected_state_action_values = torch.Tensor(batch[2]).to(device) + GAMMA * output
 
             # MSELoss
             loss = loss_function(expected_state_action_values.unsqueeze(1), state_action_values)
