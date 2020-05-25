@@ -5,7 +5,7 @@ import copy
 import gym
 
 SEED = 123
-N_EPISODES = 181
+N_EPISODES = 250
 TARGET_UPDATE = 1024
 GAMMA = 0.999
 BATCH_SIZE = 32
@@ -81,11 +81,14 @@ for episode in range(N_EPISODES):
             actions = torch.Tensor(batch[1]).unsqueeze(1).long()
             state_action_values = output.gather(1, actions)
 
-            # Calculate expected return with optimal state-action function
+            # Calculate expected return of the greedy policy
             output = torch.zeros(BATCH_SIZE, device=device)
             idxs = [idx for idx in range(BATCH_SIZE) if batch[3][idx] is not None]
             next_states = [batch[3][idx] for idx in range(BATCH_SIZE) if batch[3][idx] is not None]
-            output[idxs] = target(torch.stack(next_states)).max(1)[0].detach()
+            # Double DQN happens here.
+            actions = policy(torch.stack(next_states)).argmax(1).unsqueeze(1).long()
+            output[idxs] = target(torch.stack(next_states)).gather(1, actions).squeeze()
+
             expected_state_action_values = torch.Tensor(batch[2]).to(device) + GAMMA * output
 
             # MSELoss
