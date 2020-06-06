@@ -79,7 +79,6 @@ for episode in range(N_EPISODES):
 
         # Learning
         if experience_replay.size > BATCH_SIZE and not (episode % REPLAY_PERIOD):
-            # Uniformly sample the experience replay
             # batch = [observations, actions, rewards, next_observations]
             nodes = experience_replay.sample(BATCH_SIZE)
             batch = list(zip(*[node.experience for node in nodes]))
